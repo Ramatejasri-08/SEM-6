@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Registration System</title>
+    <style>
+        :root {
+            --error-color: #e74c3c;
+            --success-color: lightpink;
+            --border-default: black;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f6fa; padding: 40px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        
+        h2 { margin-top: 0; color: #2f3640; border-bottom: 2px solid #f1f2f6; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #353b48; }
+        
+        input, select { 
+            width: 100%; padding: 12px; border: 2px solid var(--border-default); 
+            border-radius: 6px; box-sizing: border-box; transition: all 0.3s ease; 
+        }
+
+        /* Error States */
+        .invalid-input { border-color: var(--error-color) !important; background-color: #fffafb; }
+        .error-text { 
+            color: var(--error-color); font-size: 0.85rem; margin-top: 6px; 
+            display: none; font-weight: 500;
+        }
+
+        #skillsSection { display: none; margin-top: 15px; }
+        
+        .hint { font-size: 0.75rem; color: #7f8c8d; font-weight: normal; margin-left: 5px; }
+
+        button { 
+            width: 100%; padding: 14px; background: #4834d4; color: white; 
+            border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px;
+        }
+        button:disabled { background: #dcdde1; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>User Registration</h2>
+    <form id="regForm" novalidate>
+        <div class="form-group">
+            <label for="role">Select Role</label>
+            <select id="role">
+                <option value="Student">Student</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Admin">Administrator</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" placeholder="Enter your name">
+            <div class="error-text" id="nameError">Name must be at least 3 characters.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="example@domain.com">
+            <div class="error-text" id="emailError">Invalid email format or domain.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="age">Age</label>
+            <input type="number" id="age" placeholder="Enter age">
+            <div class="error-text" id="ageError">Age limit not met for this role.</div>
+        </div>
+
+        <div id="skillsSection" class="form-group">
+            <label for="skills">Professional Skills</label>
+            <input type="text" id="skills" placeholder="e.g., Python, Management">
+            <div class="error-text" id="skillsError">Skills are required for this role.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password <span id="passHint" class="hint"></span></label>
+            <input type="password" id="password" placeholder="Create password">
+            <div class="error-text" id="passwordError">Password is too weak for your role.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="Repeat password">
+            <div class="error-text" id="confirmPasswordError">Passwords do not match.</div>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>Register Account</button>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById('regForm');
+    const roleEl = document.getElementById('role');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Dynamic Rules Configuration
+    const rules = {
+        Student: { age: 13, regex: /.{6,}/, skills: false, hint: "(Min 6 characters)" },
+        Teacher: { age: 21, regex: /^(?=.*[A-Z]).{8,}$/, skills: true, hint: "(8+ chars, 1 uppercase)" },
+        Admin:   { age: 25, regex: /^(?=.*[A-Z])(?=.*[!@#$%^&*]).{10,}$/, skills: true, hint: "(10+ chars, Upper + Special)" }
+    };
+
+    // Track which fields the user has interacted with (touched)
+    const touchedFields = new Set();
+
+    function validateField(id) {
+        const input = document.getElementById(id);
+        const errorEl = document.getElementById(id + 'Error');
+        const role = roleEl.value;
+        const currentRules = rules[role];
+        let isValid = true;
+
+        const val = input.value.trim();
+
+        // Specific Validation Logic
+        switch(id) {
+            case 'name':
+                isValid = val.length >= 3;
+                break;
+            case 'email':
+                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                break;
+            case 'age':
+                isValid = val !== "" && parseInt(val) >= currentRules.age;
+                break;
+            case 'skills':
+                isValid = !currentRules.skills || val.length > 0;
+                break;
+            case 'password':
+                isValid = currentRules.regex.test(val);
+                break;
+            case 'confirmPassword':
+                const passVal = document.getElementById('password').value;
+                isValid = val !== "" && val === passVal;
+                break;
+        }
+
+        // Only show error if the user has interacted with the field
+        if (touchedFields.has(id)) {
+            if (!isValid) {
+                input.classList.add('invalid-input');
+                errorEl.style.display = 'block';
+            } else {
+                input.classList.remove('invalid-input');
+                errorEl.style.display = 'none';
+            }
+        }
+
+        return isValid;
+    }
+
+    function checkFullForm() {
+        const fields = ['name', 'email', 'age', 'password', 'confirmPassword'];
+        if (rules[roleEl.value].skills) fields.push('skills');
+
+        let allValid = true;
+        fields.forEach(f => {
+            if (!validateField(f)) allValid = false;
+        });
+
+        submitBtn.disabled = !allValid;
+    }
+
+    // Role Change Logic
+    roleEl.addEventListener('change', () => {
+        const config = rules[roleEl.value];
+        document.getElementById('skillsSection').style.display = config.skills ? 'block' : 'none';
+        document.getElementById('passHint').textContent = config.hint;
+        
+        // When role changes, re-validate fields already touched
+        checkFullForm();
+    });
+
+    // Event Listeners for inputs
+    form.querySelectorAll('input').forEach(input => {
+        // Mark as touched when user leaves the field
+        input.addEventListener('blur', () => {
+            touchedFields.add(input.id);
+            validateField(input.id);
+            checkFullForm();
+        });
+
+        // Real-time check while typing (only if already touched)
+        input.addEventListener('input', () => {
+            if (touchedFields.has(input.id)) {
+                validateField(input.id);
+            }
+            checkFullForm();
+        });
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Form submitted successfully for ' + roleEl.value);
+    });
+
+    // Initialize display
+    document.getElementById('passHint').textContent = rules.Student.hint;
+</script>
+
+</body>
+</html>
