@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Username Checker</title>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+        .loading { color: orange; }
+    </style>
+</head>
+<body>
+
+<h2>Registration Form</h2>
+
+<form id="registerForm">
+    Username: <input type="text" id="username" required>
+    <span id="message"></span>
+    <br><br>
+    <button type="submit">Register</button>
+</form>
+
+<script>
+const usernameInput = document.getElementById("username");
+const message = document.getElementById("message");
+const form = document.getElementById("registerForm");
+let isAvailable = false;
+
+usernameInput.addEventListener("input", () => {
+    const username = usernameInput.value.trim();
+
+    if(username === "") {
+        message.textContent = "";
+        return;
+    }
+
+    message.textContent = "Checking...";
+    message.className = "loading";
+
+    fetch("users.json")
+    .then(res => res.json())
+    .then(data => {
+        setTimeout(() => {  // simulate server delay
+            if(data.users.includes(username)) {
+                message.textContent = "Username already taken";
+                message.className = "error";
+                isAvailable = false;
+            } else {
+                message.textContent = "Username available";
+                message.className = "success";
+                isAvailable = true;
+            }
+        }, 500);
+    })
+    .catch(() => {
+        message.textContent = "Error checking username";
+        message.className = "error";
+    });
+});
+
+form.addEventListener("submit", (e) => {
+    if(!isAvailable) {
+        e.preventDefault();
+        alert("Username not available!");
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Dashboard</title>
+</head>
+<body>
+
+<h2>Weather Dashboard</h2>
+
+<input type="text" id="city" placeholder="Enter city">
+<button onclick="getWeather()">Get Weather</button>
+
+<p id="loading"></p>
+<div id="weather"></div>
+
+<script>
+let cache = {};
+const apiKey = "YOUR_API_KEY"; // Put your real key here
+
+function getWeather() {
+    const city = document.getElementById("city").value.trim();
+    const weatherDiv = document.getElementById("weather");
+    const loading = document.getElementById("loading");
+
+    if(city === "") {
+        weatherDiv.innerHTML = "<p style='color:red'>Enter city name</p>";
+        return;
+    }
+
+    if(cache[city]) {
+        displayWeather(cache[city]);
+        return;
+    }
+
+    loading.textContent = "Loading...";
+    weatherDiv.innerHTML = "";
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
+    .then(response => {
+        if(response.status === 404) {
+            throw new Error("City not found");
+        }
+        if(response.status === 401) {
+            throw new Error("Invalid API Key");
+        }
+        return response.json();
+    })
+    .then(data => {
+        cache[city] = data;
+        displayWeather(data);
+        loading.textContent = "";
+    })
+    .catch(error => {
+        loading.textContent = "";
+        weatherDiv.innerHTML = `<p style="color:red;">${error.message}</p>`;
+    });
+}
+
+function displayWeather(data) {
+    document.getElementById("weather").innerHTML = `
+        <h3>${data.name}</h3>
+        <p>Temperature: ${data.main.temp}°C</p>
+        <p>Humidity: ${data.main.humidity}%</p>
+        <p>Condition: ${data.weather[0].description}</p>
+    `;
+}
+</script>
+
+</body>
+</html>
