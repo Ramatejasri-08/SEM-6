@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Inventory</title>
+</head>
+<body>
+
+<h2>Product Inventory</h2>
+<button onclick="loadInventory()">Load Inventory</button>
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Category</th>
+            <th>Price</th><th>Stock</th>
+        </tr>
+    </thead>
+    <tbody id="inventoryTable"></tbody>
+</table>
+
+<h3>Total Inventory Value: ₹<span id="totalValue">0</span></h3>
+
+<script>
+function loadInventory() {
+    fetch("inventory.json")
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("inventoryTable");
+        let total = 0;
+        table.innerHTML = "";
+
+        data.forEach(p => {
+            total += p.price * p.stock;
+
+            const lowStock = p.stock < 10 ? "style='color:red'" : "";
+
+            table.innerHTML += `
+                <tr ${lowStock}>
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.category}</td>
+                    <td>${p.price}</td>
+                    <td>${p.stock}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("totalValue").textContent = total;
+    })
+    .catch(() => alert("Error loading inventory"));
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book>
+        <id>1</id>
+        <title>JavaScript Basics</title>
+        <author>John Doe</author>
+        <available>Yes</available>
+    </book>
+</library>

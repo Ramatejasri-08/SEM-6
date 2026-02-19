@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Management</title>
+</head>
+<body>
+
+<h2>Employee Management System</h2>
+
+<button onclick="loadEmployees()">Load Employees</button>
+<div id="message"></div>
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Department</th><th>Salary</th><th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="empTable"></tbody>
+</table>
+
+<script>
+let xmlDoc;
+
+function loadEmployees() {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "employees.xml", true);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            xmlDoc = xhr.responseXML;
+            displayEmployees();
+            showMsg("Employees Loaded (200 OK)", "green");
+        } else {
+            showMsg("Error loading XML (404)", "red");
+        }
+    };
+    xhr.send();
+}
+
+function displayEmployees() {
+    const table = document.getElementById("empTable");
+    table.innerHTML = "";
+
+    const employees = xmlDoc.getElementsByTagName("employee");
+
+    if (employees.length === 0) {
+        table.innerHTML = "<tr><td colspan='5'>No Employees Found</td></tr>";
+        return;
+    }
+
+    for (let i = 0; i < employees.length; i++) {
+        const id = employees[i].getElementsByTagName("id")[0].textContent;
+        const name = employees[i].getElementsByTagName("name")[0].textContent;
+        const dept = employees[i].getElementsByTagName("department")[0].textContent;
+        const salary = employees[i].getElementsByTagName("salary")[0].textContent;
+
+        table.innerHTML += `
+            <tr>
+                <td>${id}</td>
+                <td>${name}</td>
+                <td>${dept}</td>
+                <td>${salary}</td>
+                <td>
+                    <button onclick="deleteEmp(${i})">Delete</button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function deleteEmp(index) {
+    const employees = xmlDoc.getElementsByTagName("employee");
+    employees[index].remove();
+    displayEmployees();
+    showMsg("Employee Deleted", "green");
+}
+
+function showMsg(msg, color) {
+    document.getElementById("message").innerHTML =
+        `<p style="color:${color}">${msg}</p>`;
+}
+</script>
+
+</body>
+</html>

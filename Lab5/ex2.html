@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Tracker</title>
+</head>
+<body>
+
+<h2>Library Book Tracker</h2>
+<button onclick="loadBooks()">Load Books</button>
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>ID</th><th>Title</th><th>Author</th><th>Available</th><th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="bookTable"></tbody>
+</table>
+
+<script>
+let xmlDoc;
+
+function loadBooks() {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "books.xml", true);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            xmlDoc = xhr.responseXML;
+            displayBooks();
+        }
+    };
+    xhr.send();
+}
+
+function displayBooks() {
+    const table = document.getElementById("bookTable");
+    table.innerHTML = "";
+
+    const books = xmlDoc.getElementsByTagName("book");
+
+    for (let i = 0; i < books.length; i++) {
+        const id = books[i].getElementsByTagName("id")[0].textContent;
+        const title = books[i].getElementsByTagName("title")[0].textContent;
+        const author = books[i].getElementsByTagName("author")[0].textContent;
+        const available = books[i].getElementsByTagName("available")[0].textContent;
+
+        table.innerHTML += `
+            <tr>
+                <td>${id}</td>
+                <td>${title}</td>
+                <td>${author}</td>
+                <td>${available}</td>
+                <td>
+                    <button onclick="deleteBook(${i})">Delete</button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function deleteBook(index) {
+    const books = xmlDoc.getElementsByTagName("book");
+    books[index].remove();
+    displayBooks();
+}
+</script>
+
+</body>
+</html>
